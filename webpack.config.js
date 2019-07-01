@@ -1,58 +1,53 @@
 const path = require("path");
+const { paths } = require('./conf')
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const alias = require(`${paths.configs}/aliasList`)(__dirname)
+const babelConfig = require(`${paths.configs}/babel.config`)
+const stylesConfig = require(`${paths.configs}/styles.config`)
+const filesConfig = require(`${paths.configs}/files.config`)
+const htmlConfig = require(`${paths.configs}/html.config`)
+const fs = require('fs')
+
+const generateHtmlPlugins = (templateDir) => {
+    const templateFiles = fs.readdirSync(path.resolve(__dirname, templateDir));
+    return templateFiles.map(item => {
+        const parts = item.split('.');
+        const name = parts[0];
+        const extension = parts[1];
+        return new HtmlWebpackPlugin({
+            filename: `${name}.html`,
+            template: path.resolve(__dirname, `${templateDir}/${name}.${extension}`),
+            inject: true,
+            hash: true
+        })
+    })
+}
+
+const htmlPlugins = generateHtmlPlugins('src/html/views')
+
 module.exports = {
     entry: {
-        main: "./src/js/index.js"
+        main: "./src/index.js"
     },
     output: {
-        path: path.resolve(__dirname, "public"),
-        filename: "main.js"
+        path: paths.build,
+        filename: "bundle.js"
     },
     devServer: {
-        contentBase: path.join(__dirname, 'public')
+        contentBase: paths.public
     },
     module: {
         rules: [
-            { 
-                test: /\.js$/, 
-                exclude: /node_modules/, 
-                loader: "babel-loader" 
-            },
-            {
-                test: /\.scss$/,
-                use: [
-                    'style-loader',
-                    'css-loader',
-                    'sass-loader'
-                ]
-            },
-            {
-                test: /\.(gif|png|jpe?g|svg)$/i,
-            use: [
-                'file-loader',
-                {
-                    loader: 'image-webpack-loader',
-                    options: {
-                        disable: true, 
-                    },
-                },
-            ],
-            }
+            babelConfig,
+            stylesConfig,
+            filesConfig,
+            ...htmlConfig
         ]
     },
     plugins: [
-        new HtmlWebpackPlugin({
-            inject: false,
-            hash: true,
-            template: './src/index.html',
-            filename: 'index.html'
-        })
-    ],
+        
+    ].concat(htmlPlugins),
     resolve: {
-        alias: {
-            src: path.resolve(__dirname, 'src/'),
-            core: path.resolve(__dirname, 'src/core/'),
-            root: path.resolve(__dirname, '')
-        }
+        alias
     }
 };
