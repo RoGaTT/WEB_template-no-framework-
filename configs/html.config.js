@@ -10,7 +10,8 @@ module.exports = [
             {
                 loader: 'html-loader',
                 options: {
-                    interpolate: true
+                    interpolate: true,
+                    root: 'src'
                 }
             }
         ],
